@@ -1,0 +1,10 @@
+[package]
+name = "contact-htmx-tutorial"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+axum = "0.8.4"
+lazy_static = "1.5.0"
+tera = "1.20.0"
+tokio = {version = "1.45.1", features = ["full"] }
