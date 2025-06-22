@@ -9,21 +9,27 @@ use axum::{
     Router,
 };
 use lazy_static::lazy_static;
+use repository::contact_db::ContactDB;
 use serde::Deserialize;
-use tera::Tera;
+use tera::{Context, Result, Tera};
 use tokio;
 
 lazy_static! {
     pub static ref TEMPLATES: Tera = {
-        let mut tera = match Tera::new("templates") {
+        let mut tera = match Tera::new("templates/*.html") {
             Ok(t) => t,
             Err(e) => {
                 println!("Parsing errors(s): {}", e);
                 ::std::process::exit(1);
             }
         };
+        // tera.autoescape_on(vec![]);
         tera
     };
+}
+
+lazy_static! {
+    static ref CONTACTS: ContactDB = ContactDB::new();
 }
 
 #[derive(Deserialize)]
@@ -49,8 +55,25 @@ async fn index() -> Redirect {
 
 async fn contacts(Query(contact_search): Query<ContactSearch>) -> Html<String> {
     let result = match contact_search.q {
-        Some(q) => Html(format!("searched for {}", q)),
-        None => Html("no search query provided".to_string()),
+        Some(q) => {
+            let result = CONTACTS.get(q);
+            let contacts = vec![result];
+
+            let mut context = Context::new();
+            context.insert("contacts", &contacts);
+
+            let to_render = TEMPLATES.render("index.html", &context).unwrap();
+            Html(to_render)
+        }
+        None => {
+            let contacts = CONTACTS.all();
+
+            let mut context = Context::new();
+            context.insert("contacts", &contacts);
+
+            let to_render = TEMPLATES.render("index.html", &context).unwrap();
+            Html(to_render)
+        }
     };
 
     result
