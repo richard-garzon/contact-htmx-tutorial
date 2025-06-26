@@ -23,7 +23,7 @@ lazy_static! {
                 ::std::process::exit(1);
             }
         };
-        // tera.autoescape_on(vec![]);
+        tera.autoescape_on(vec![]);
         tera
     };
 }
@@ -57,7 +57,12 @@ async fn contacts(Query(contact_search): Query<ContactSearch>) -> Html<String> {
     let result = match contact_search.q {
         Some(q) => {
             let result = CONTACTS.get(q);
-            let contacts = vec![result];
+            let contacts = match result {
+                Some(c) => {
+                    vec![c]
+                }
+                None => CONTACTS.all(),
+            };
 
             let mut context = Context::new();
             context.insert("contacts", &contacts);

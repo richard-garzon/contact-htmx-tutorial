@@ -38,11 +38,11 @@ impl ContactDB {
         contact_db
     }
 
-    pub fn all(&self) -> Vec<Contact> {
-        self.db.values().cloned().collect()
+    pub fn all(&self) -> Vec<&Contact> {
+        self.db.values().collect()
     }
 
-    pub fn get(&self, first_name: String) -> Contact {
-        self.db.get(&first_name).unwrap().clone()
+    pub fn get(&self, first_name: String) -> Option<&Contact> {
+        self.db.get(&first_name)
     }
 }
