@@ -96,6 +96,12 @@ async fn contacts_new_get() -> Html<String> {
     Html(to_render)
 }
 
+async fn contacts_new_post() {
+    // TODO
+    // return a redirect to /contacts on successful save
+    // return new.html to see errors if there are errors
+}
+
 async fn handler_404() -> impl IntoResponse {
     (
         StatusCode::NOT_FOUND,

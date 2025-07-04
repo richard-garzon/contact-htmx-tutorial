@@ -45,4 +45,8 @@ impl ContactDB {
     pub fn get(&self, first_name: String) -> Option<&Contact> {
         self.db.get(&first_name)
     }
+
+    pub fn save(&self, c: Contact) {
+        self.db.insert(c.first_name, &c);
+    }
 }
