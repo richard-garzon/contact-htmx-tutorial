@@ -9,6 +9,7 @@ use axum::{
     Router,
 };
 use lazy_static::lazy_static;
+use models::contact::Contact;
 use repository::contact_db::ContactDB;
 use serde::Deserialize;
 use tera::{Context, Result, Tera};
@@ -41,7 +42,8 @@ struct ContactSearch {
 async fn main() {
     let app = Router::new()
         .route("/", get(index))
-        .route("/contacts", get(contacts));
+        .route("/contacts", get(contacts))
+        .route("/contacts/new", get(contacts_new_get));
     let app = app.fallback(handler_404);
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
@@ -84,6 +86,19 @@ async fn contacts(Query(contact_search): Query<ContactSearch>) -> Html<String> {
     result
 }
 
+async fn contacts_new_get() -> Html<String> {
+    let c = Contact {
+        ..Default::default()
+    };
+    let mut context = Context::new();
+    context.insert("contact", &c);
+    let to_render = TEMPLATES.render("new.html", &context).unwrap();
+    Html(to_render)
+}
+
 async fn handler_404() -> impl IntoResponse {
-    (StatusCode::NOT_FOUND, "404")
+    (
+        StatusCode::NOT_FOUND,
+        "whoops didn't find what you are looking for",
+    )
 }

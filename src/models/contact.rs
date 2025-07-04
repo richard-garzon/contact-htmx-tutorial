@@ -11,6 +11,19 @@ pub struct Contact {
     pub errors: HashMap<String, String>,
 }
 
+impl Default for Contact {
+    fn default() -> Self {
+        Self {
+            id: -1,
+            first_name: "First Name".to_string(),
+            last_name: "Last Name".to_string(),
+            phone: "Phone #".to_string(),
+            email: "Email".to_string(),
+            errors: HashMap::new(),
+        }
+    }
+}
+
 impl Contact {
     pub fn new(
         id: i32,
