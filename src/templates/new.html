@@ -8,28 +8,28 @@
         <div class="table rows">
             <p>
                 <label for="email">Email</label>
-                <input name="email" id="email" type="text" placeholder="Email" value="{{ contact.email }}">
+                <input name="email" id="email" type="text" placeholder="" value="{{ contact.email }}">
                 {% if contact.errors and contact.errors.email %}
                     <span class="error">{{ contact.errors.email }}</span>
                 {% endif %}
             </p>
             <p>
                 <label for="first_name">First Name</label>
-                <input name="first_name" id="first_name" type="text" placeholder="First Name" value="{{ contact.first_name }}">
+                <input name="first_name" id="first_name" type="text" placeholder="" value="{{ contact.first_name }}">
                 {% if contact.errors and contact.errors.first_name %}
                     <span class="error">{{ contact.errors.first_name }}</span>
                 {% endif %}
             </p>
             <p>
                 <label for="last_name">Last Name</label>
-                <input name="last_name" id="last_name" type="text" placeholder="Last Name" value="{{ contact.last_name }}">
+                <input name="last_name" id="last_name" type="text" placeholder="" value="{{ contact.last_name }}">
                 {% if contact.errors and contact.errors.last_name %}
                     <span class="error">{{ contact.errors.last_name }}</span>
                 {% endif %}
             </p>
             <p>
                 <label for="phone">Phone</label>
-                <input name="phone" id="phone" type="text" placeholder="Phone" value="{{ contact.phone }}">
+                <input name="phone" id="phone" type="text" placeholder="" value="{{ contact.phone }}">
                 {% if contact.errors and contact.errors.phone %}
                     <span class="error">{{ contact.errors.phone }}</span>
                 {% endif %}

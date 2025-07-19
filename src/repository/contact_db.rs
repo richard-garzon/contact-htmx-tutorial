@@ -46,7 +46,7 @@ impl ContactDB {
         self.db.get(&first_name)
     }
 
-    pub fn save(&self, c: Contact) {
-        self.db.insert(c.first_name, &c);
+    pub fn save(&mut self, c: Contact) {
+        self.db.insert(c.first_name.clone(), c);
     }
 }

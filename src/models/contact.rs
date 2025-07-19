@@ -1,4 +1,4 @@
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 #[derive(Clone, Serialize)]
@@ -42,4 +42,12 @@ impl Contact {
             errors,
         }
     }
+}
+
+#[derive(Debug, Deserialize)]
+pub struct ContactForm {
+    pub email: String,
+    pub first_name: String,
+    pub last_name: String,
+    pub phone: String,
 }

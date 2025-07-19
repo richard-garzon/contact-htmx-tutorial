@@ -1,19 +1,22 @@
 mod models;
 mod repository;
 
+use std::collections::HashMap;
+
 use axum::{
     extract::Query,
     http::StatusCode,
-    response::{Html, IntoResponse, Redirect},
-    routing::get,
+    response::{Form, Html, IntoResponse, Redirect},
+    routing::{get, post},
     Router,
 };
 use lazy_static::lazy_static;
-use models::contact::Contact;
+use models::contact::{Contact, ContactForm};
 use repository::contact_db::ContactDB;
 use serde::Deserialize;
-use tera::{Context, Result, Tera};
+use tera::{Context, Tera};
 use tokio;
+use tokio::sync::Mutex;
 
 lazy_static! {
     pub static ref TEMPLATES: Tera = {
@@ -30,7 +33,7 @@ lazy_static! {
 }
 
 lazy_static! {
-    static ref CONTACTS: ContactDB = ContactDB::new();
+    static ref CONTACTS: Mutex<ContactDB> = Mutex::new(ContactDB::new());
 }
 
 #[derive(Deserialize)]
@@ -43,7 +46,8 @@ async fn main() {
     let app = Router::new()
         .route("/", get(index))
         .route("/contacts", get(contacts))
-        .route("/contacts/new", get(contacts_new_get));
+        .route("/contacts/new", get(contacts_new_get))
+        .route("/contacts/new", post(contacts_new_post));
     let app = app.fallback(handler_404);
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
@@ -56,14 +60,15 @@ async fn index() -> Redirect {
 }
 
 async fn contacts(Query(contact_search): Query<ContactSearch>) -> Html<String> {
+    let contacts_db = CONTACTS.lock().await;
     let result = match contact_search.q {
         Some(q) => {
-            let result = CONTACTS.get(q);
+            let result = contacts_db.get(q);
             let contacts = match result {
                 Some(c) => {
                     vec![c]
                 }
-                None => CONTACTS.all(),
+                None => contacts_db.all(),
             };
 
             let mut context = Context::new();
@@ -73,7 +78,7 @@ async fn contacts(Query(contact_search): Query<ContactSearch>) -> Html<String> {
             Html(to_render)
         }
         None => {
-            let contacts = CONTACTS.all();
+            let contacts = contacts_db.all();
 
             let mut context = Context::new();
             context.insert("contacts", &contacts);
@@ -96,10 +101,50 @@ async fn contacts_new_get() -> Html<String> {
     Html(to_render)
 }
 
-async fn contacts_new_post() {
-    // TODO
-    // return a redirect to /contacts on successful save
-    // return new.html to see errors if there are errors
+async fn contacts_new_post(Form(form_data): Form<ContactForm>) -> impl IntoResponse {
+    let mut errors = HashMap::new();
+
+    if form_data.email.trim().is_empty() {
+        errors.insert("email".to_string(), "Email is required".to_string());
+    }
+    if form_data.first_name.trim().is_empty() {
+        errors.insert(
+            "first_name".to_string(),
+            "First name is required".to_string(),
+        );
+    }
+    if form_data.last_name.trim().is_empty() {
+        errors.insert("last_name".to_string(), "Last name is required".to_string());
+    }
+    if form_data.phone.trim().is_empty() {
+        errors.insert("phone".to_string(), "Phone number is required.".to_string());
+    }
+
+    let contact = Contact::new(
+        999,
+        form_data.first_name,
+        form_data.last_name,
+        form_data.phone,
+        form_data.email,
+        errors,
+    );
+
+    let mut context = Context::new();
+
+    let mut contacts_db = CONTACTS.lock().await;
+
+    let html = if contact.errors.is_empty() {
+        contacts_db.save(contact);
+        let contacts = contacts_db.all();
+        context.insert("contacts", &contacts);
+
+        TEMPLATES.render("index.html", &context).unwrap()
+    } else {
+        context.insert("contact", &contact);
+        TEMPLATES.render("new.html", &context).unwrap()
+    };
+
+    Html(html)
 }
 
 async fn handler_404() -> impl IntoResponse {
