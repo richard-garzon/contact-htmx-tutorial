@@ -4,7 +4,7 @@ mod repository;
 use std::collections::HashMap;
 
 use axum::{
-    extract::Query,
+    extract::{Path, Query},
     http::StatusCode,
     response::{Form, Html, IntoResponse, Redirect},
     routing::{get, post},
@@ -47,7 +47,8 @@ async fn main() {
         .route("/", get(index))
         .route("/contacts", get(contacts))
         .route("/contacts/new", get(contacts_new_get))
-        .route("/contacts/new", post(contacts_new_post));
+        .route("/contacts/new", post(contacts_new_post))
+        .route("/contacts/{id}", post(contacts_view));
     let app = app.fallback(handler_404);
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
@@ -63,10 +64,10 @@ async fn contacts(Query(contact_search): Query<ContactSearch>) -> Html<String> {
     let contacts_db = CONTACTS.lock().await;
     let result = match contact_search.q {
         Some(q) => {
-            let result = contacts_db.get(q);
+            let result = contacts_db.search(q);
             let contacts = match result {
                 Some(c) => {
-                    vec![c]
+                    c
                 }
                 None => contacts_db.all(),
             };
@@ -145,6 +146,10 @@ async fn contacts_new_post(Form(form_data): Form<ContactForm>) -> impl IntoRespo
     };
 
     Html(html)
+}
+
+async fn contacts_view(Path(id): Path<u32>) -> Html<String> {
+    let 
 }
 
 async fn handler_404() -> impl IntoResponse {

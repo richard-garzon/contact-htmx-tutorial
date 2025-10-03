@@ -3,7 +3,7 @@ use std::collections::HashMap;
 
 #[derive(Clone, Serialize)]
 pub struct Contact {
-    pub id: i32,
+    pub id: u32,
     pub first_name: String,
     pub last_name: String,
     pub phone: String,
@@ -14,7 +14,7 @@ pub struct Contact {
 impl Default for Contact {
     fn default() -> Self {
         Self {
-            id: -1,
+            id: 0,
             first_name: "First Name".to_string(),
             last_name: "Last Name".to_string(),
             phone: "Phone #".to_string(),
@@ -26,7 +26,7 @@ impl Default for Contact {
 
 impl Contact {
     pub fn new(
-        id: i32,
+        id: u32,
         first_name: String,
         last_name: String,
         phone: String,

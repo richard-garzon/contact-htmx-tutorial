@@ -2,7 +2,7 @@ use super::super::models::contact::Contact;
 use std::collections::HashMap;
 
 pub struct ContactDB {
-    db: HashMap<String, Contact>,
+    db: HashMap<u32, Contact>,
 }
 
 impl ContactDB {
@@ -29,11 +29,11 @@ impl ContactDB {
 
         contact_db
             .db
-            .insert(test_contact_1.first_name.clone(), test_contact_1);
+            .insert(test_contact_1.id, test_contact_1);
 
         contact_db
             .db
-            .insert(test_contact_2.first_name.clone(), test_contact_2);
+            .insert(test_contact_2.id, test_contact_2);
 
         contact_db
     }
@@ -42,11 +42,34 @@ impl ContactDB {
         self.db.values().collect()
     }
 
-    pub fn get(&self, first_name: String) -> Option<&Contact> {
-        self.db.get(&first_name)
+    pub fn search(&self, query: String) -> Vec<&Contact> {
+        let mut result: Vec<&Contact>  = vec![];
+        for c in self.db.values() {
+            let match_first_name = c.first_name.contains(&query);
+            let match_last_name = c.last_name.contains(&query);
+            let match_email = c.email.contains(&query);
+            let match_phone = c.phone.contains(&query);
+
+            if match_first_name || match_last_name || match_email || match_phone {
+                result.push(c);
+            }
+        }
+
+        result
+    }
+
+    pub fn find(&self, id: u32) -> Option<&Contact> {
+        self.db.get(&id)
     }
 
     pub fn save(&mut self, c: Contact) {
-        self.db.insert(c.first_name.clone(), c);
+        self.db.insert(c.id, c);
     }
 }
+
+
+// TODO
+// 1. turn get() into search(), implementing this logic:
+// https://github.com/bigskysoftware/contact-app/blob/master/contacts_model.py
+// 2. make get_by_id find() and make the key for this db id
+// 3 .then implement contacts details page
