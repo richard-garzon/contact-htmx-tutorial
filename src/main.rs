@@ -53,6 +53,7 @@ async fn main() {
         .route("/contacts/new", get(contacts_new_get))
         .route("/contacts/new", post(contacts_new_post))
         .route("/contacts/{id}", get(contacts_view))
+        .route("/contacts/{id}/edit", get(contacts_edit_get))
         .nest_service("/static", static_files)
         .fallback(handler_404);
 
@@ -137,6 +138,20 @@ async fn contacts_view(Path(id): Path<u32>) -> Html<String> {
             let mut context = Context::new();
             context.insert("contact", c);
             Html(TEMPLATES.render("show.html", &context).unwrap())
+        }
+        None => Html(TEMPLATES.render("404.html", &Context::new()).unwrap()),
+    };
+
+    result
+}
+
+async fn contacts_edit_get(Path(id): Path<u32>) -> Html<String> {
+    let contacts_db = CONTACTS.lock().await;
+    let result = match contacts_db.find(id) {
+        Some(c) => {
+            let mut context = Context::new();
+            context.insert("contact", c);
+            Html(TEMPLATES.render("edit.html", &context).unwrap())
         }
         None => Html(TEMPLATES.render("404.html", &Context::new()).unwrap()),
     };

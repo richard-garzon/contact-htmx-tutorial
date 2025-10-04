@@ -62,9 +62,3 @@ impl ContactDB {
         self.db.insert(c.id, c);
     }
 }
-
-// TODO
-// 1. turn get() into search(), implementing this logic:
-// https://github.com/bigskysoftware/contact-app/blob/master/contacts_model.py
-// 2. make get_by_id find() and make the key for this db id
-// 3 .then implement contacts details page

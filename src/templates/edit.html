@@ -12,24 +12,32 @@
                            hx-get="/contacts/{{ contact.id }}/email" hx-target="next .error"
                            hx-trigger="change, keyup delay:200ms"
                            placeholder="Email" value="{{ contact.email }}">
+                    {% if contact.errors and contact.errors['email'] %}
                     <span class="error">{{ contact.errors['email'] }}</span>
+                    {% endif %}
                 </p>
                 <p>
                     <label for="first_name">First Name</label>
                     <input name="first_name" id="first_name" type="text" placeholder="First Name"
                            value="{{ contact.first_name }}">
-                    <span class="error">{{ contact.errors['first'] }}</span>
+                    {% if contact.errors and contact.errors['first_name'] %}
+                    <span class="error">{{ contact.errors['first_name'] }}</span>
+                    {% endif %}
                 </p>
                 <p>
                     <label for="last_name">Last Name</label>
                     <input name="last_name" id="last_name" type="text" placeholder="Last Name"
                            value="{{ contact.last_name }}">
-                    <span class="error">{{ contact.errors['last'] }}</span>
+                    {% if contact.errors and contact.errors['last_name'] %}
+                    <span class="error">{{ contact.errors['last_name'] }}</span>
+                    {% endif %}
                 </p>
                 <p>
                     <label for="phone">Phone</label>
                     <input name="phone" id="phone" type="text" placeholder="Phone" value="{{ contact.phone }}">
+                    {% if contact.errors and contact.errors['phone'] %}
                     <span class="error">{{ contact.errors['phone'] }}</span>
+                    {% endif %}
                 </p>
             </div>
             <button>Save</button>
