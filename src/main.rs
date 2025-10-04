@@ -110,20 +110,16 @@ async fn contacts_new_post(Form(form_data): Form<ContactForm>) -> impl IntoRespo
 
     let mut context = Context::new();
 
-    let mut contacts_db = CONTACTS.lock().await;
-
     let html = if contact.errors.is_empty() {
+        let mut contacts_db = CONTACTS.lock().await;
         contacts_db.save(contact);
-        let contacts = contacts_db.all();
-        context.insert("contacts", &contacts);
-
-        TEMPLATES.render("index.html", &context).unwrap()
+        Redirect::to("contacts.html").into_response()
     } else {
         context.insert("contact", &contact);
-        TEMPLATES.render("new.html", &context).unwrap()
+        Html(TEMPLATES.render("new.html", &context).unwrap()).into_response()
     };
 
-    Html(html)
+    html
 }
 
 async fn contacts_view(Path(id): Path<u32>) -> Html<String> {
