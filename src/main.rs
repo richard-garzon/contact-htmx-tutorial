@@ -17,6 +17,7 @@ use serde::Deserialize;
 use tera::{Context, Tera};
 use tokio;
 use tokio::sync::Mutex;
+use tower_http::services::ServeDir;
 
 lazy_static! {
     pub static ref TEMPLATES: Tera = {
@@ -43,14 +44,17 @@ struct ContactSearch {
 
 #[tokio::main]
 async fn main() {
+    let static_files = ServeDir::new("static");
+
     let app = Router::new()
         .route("/", get(index))
         .route("/contacts", get(contacts))
         .route("/contacts/", get(contacts))
         .route("/contacts/new", get(contacts_new_get))
         .route("/contacts/new", post(contacts_new_post))
-        .route("/contacts/{id}", get(contacts_view));
-    let app = app.fallback(handler_404);
+        .route("/contacts/{id}", get(contacts_view))
+        .nest_service("/static", static_files)
+        .fallback(handler_404);
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
     println!("listening on {}", listener.local_addr().unwrap());
@@ -117,7 +121,7 @@ async fn contacts_new_post(Form(form_data): Form<ContactForm>) -> impl IntoRespo
     let html = if contact.errors.is_empty() {
         let mut contacts_db = CONTACTS.lock().await;
         contacts_db.save(contact);
-        Redirect::to("contacts.html").into_response()
+        Redirect::to("/contacts").into_response()
     } else {
         context.insert("contact", &contact);
         Html(TEMPLATES.render("new.html", &context).unwrap()).into_response()
