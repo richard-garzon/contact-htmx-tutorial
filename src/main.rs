@@ -62,34 +62,14 @@ async fn index() -> Redirect {
 
 async fn contacts(Query(contact_search): Query<ContactSearch>) -> Html<String> {
     let contacts_db = CONTACTS.lock().await;
-    let result = match contact_search.q {
-        Some(q) => {
-            let result = contacts_db.search(q);
-            let contacts = match result {
-                Some(c) => {
-                    c
-                }
-                None => contacts_db.all(),
-            };
+    let contacts = contacts_db.search(contact_search.q.unwrap_or_else(|| {
+        String::new()
+    }
+    ));
+    let mut context = Context::new();
+    context.insert("contacts", &contacts);
 
-            let mut context = Context::new();
-            context.insert("contacts", &contacts);
-
-            let to_render = TEMPLATES.render("index.html", &context).unwrap();
-            Html(to_render)
-        }
-        None => {
-            let contacts = contacts_db.all();
-
-            let mut context = Context::new();
-            context.insert("contacts", &contacts);
-
-            let to_render = TEMPLATES.render("index.html", &context).unwrap();
-            Html(to_render)
-        }
-    };
-
-    result
+    Html(TEMPLATES.render("index.html", &context).unwrap())
 }
 
 async fn contacts_new_get() -> Html<String> {
@@ -149,7 +129,7 @@ async fn contacts_new_post(Form(form_data): Form<ContactForm>) -> impl IntoRespo
 }
 
 async fn contacts_view(Path(id): Path<u32>) -> Html<String> {
-    let 
+    Html(String::from("wow"))
 }
 
 async fn handler_404() -> impl IntoResponse {
