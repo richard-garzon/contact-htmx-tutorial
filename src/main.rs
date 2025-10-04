@@ -46,9 +46,10 @@ async fn main() {
     let app = Router::new()
         .route("/", get(index))
         .route("/contacts", get(contacts))
+        .route("/contacts/", get(contacts))
         .route("/contacts/new", get(contacts_new_get))
         .route("/contacts/new", post(contacts_new_post))
-        .route("/contacts/{id}", post(contacts_view));
+        .route("/contacts/{id}", get(contacts_view));
     let app = app.fallback(handler_404);
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
@@ -62,10 +63,7 @@ async fn index() -> Redirect {
 
 async fn contacts(Query(contact_search): Query<ContactSearch>) -> Html<String> {
     let contacts_db = CONTACTS.lock().await;
-    let contacts = contacts_db.search(contact_search.q.unwrap_or_else(|| {
-        String::new()
-    }
-    ));
+    let contacts = contacts_db.search(contact_search.q.unwrap_or_else(|| String::new()));
     let mut context = Context::new();
     context.insert("contacts", &contacts);
 
@@ -129,7 +127,17 @@ async fn contacts_new_post(Form(form_data): Form<ContactForm>) -> impl IntoRespo
 }
 
 async fn contacts_view(Path(id): Path<u32>) -> Html<String> {
-    Html(String::from("wow"))
+    let contacts_db = CONTACTS.lock().await;
+    let result = match contacts_db.find(id) {
+        Some(c) => {
+            let mut context = Context::new();
+            context.insert("contact", c);
+            Html(TEMPLATES.render("show.html", &context).unwrap())
+        }
+        None => Html(TEMPLATES.render("404.html", &Context::new()).unwrap()),
+    };
+
+    result
 }
 
 async fn handler_404() -> impl IntoResponse {

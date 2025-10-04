@@ -27,13 +27,9 @@ impl ContactDB {
             HashMap::new(),
         );
 
-        contact_db
-            .db
-            .insert(test_contact_1.id, test_contact_1);
+        contact_db.db.insert(test_contact_1.id, test_contact_1);
 
-        contact_db
-            .db
-            .insert(test_contact_2.id, test_contact_2);
+        contact_db.db.insert(test_contact_2.id, test_contact_2);
 
         contact_db
     }
@@ -43,7 +39,7 @@ impl ContactDB {
     }
 
     pub fn search(&self, query: String) -> Vec<&Contact> {
-        let mut result: Vec<&Contact>  = vec![];
+        let mut result: Vec<&Contact> = vec![];
         for c in self.db.values() {
             let match_first_name = c.first_name.contains(&query);
             let match_last_name = c.last_name.contains(&query);
@@ -66,7 +62,6 @@ impl ContactDB {
         self.db.insert(c.id, c);
     }
 }
-
 
 // TODO
 // 1. turn get() into search(), implementing this logic:
