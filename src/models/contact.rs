@@ -42,6 +42,14 @@ impl Contact {
             errors,
         }
     }
+
+    pub fn update(&mut self, other: &Contact) {
+        self.first_name = other.first_name.clone();
+        self.last_name = other.last_name.clone();
+        self.phone = other.phone.clone();
+        self.email = other.email.clone();
+        self.errors = other.errors.clone();
+    }
 }
 
 #[derive(Debug, Deserialize)]

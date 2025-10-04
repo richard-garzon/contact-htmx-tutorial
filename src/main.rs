@@ -54,6 +54,7 @@ async fn main() {
         .route("/contacts/new", post(contacts_new_post))
         .route("/contacts/{id}", get(contacts_view))
         .route("/contacts/{id}/edit", get(contacts_edit_get))
+        .route("/contacts/{id}/edit", post(contacts_edit_post))
         .nest_service("/static", static_files)
         .fallback(handler_404);
 
@@ -157,6 +158,51 @@ async fn contacts_edit_get(Path(id): Path<u32>) -> Html<String> {
     };
 
     result
+}
+
+async fn contacts_edit_post(
+    Path(id): Path<u32>,
+    Form(form_data): Form<ContactForm>,
+) -> impl IntoResponse {
+    let mut errors = HashMap::new();
+
+    if form_data.email.trim().is_empty() {
+        errors.insert("email".to_string(), "Email is required".to_string());
+    }
+    if form_data.first_name.trim().is_empty() {
+        errors.insert(
+            "first_name".to_string(),
+            "First name is required".to_string(),
+        );
+    }
+    if form_data.last_name.trim().is_empty() {
+        errors.insert("last_name".to_string(), "Last name is required".to_string());
+    }
+    if form_data.phone.trim().is_empty() {
+        errors.insert("phone".to_string(), "Phone number is required.".to_string());
+    }
+
+    let contact = Contact::new(
+        id,
+        form_data.first_name,
+        form_data.last_name,
+        form_data.phone,
+        form_data.email,
+        errors,
+    );
+
+    let mut context = Context::new();
+
+    let html = if contact.errors.is_empty() {
+        let mut contacts_db = CONTACTS.lock().await;
+        contacts_db.update(id, &contact);
+        Redirect::to("/contacts").into_response()
+    } else {
+        context.insert("contact", &contact);
+        Html(TEMPLATES.render("edit.html", &context).unwrap()).into_response()
+    };
+
+    html
 }
 
 async fn handler_404() -> impl IntoResponse {

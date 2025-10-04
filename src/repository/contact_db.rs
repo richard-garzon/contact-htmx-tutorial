@@ -34,6 +34,16 @@ impl ContactDB {
         contact_db
     }
 
+    pub fn update(&mut self, id: u32, other_contact: &Contact) -> bool {
+        if let Some(c) = self.db.get_mut(&id) {
+            c.update(other_contact);
+
+            true
+        } else {
+            false
+        }
+    }
+
     pub fn all(&self) -> Vec<&Contact> {
         self.db.values().collect()
     }
