@@ -63,7 +63,11 @@ async fn index() -> Redirect {
 
 async fn contacts(Query(contact_search): Query<ContactSearch>) -> Html<String> {
     let contacts_db = CONTACTS.lock().await;
-    let contacts = contacts_db.search(contact_search.q.unwrap_or_else(|| String::new()));
+    let search = contact_search.q.unwrap_or_else(|| String::new());
+    let contacts = match search.is_empty() {
+        true => contacts_db.all(),
+        false => contacts_db.search(search),
+    };
     let mut context = Context::new();
     context.insert("contacts", &contacts);
 
