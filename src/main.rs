@@ -5,7 +5,7 @@ use std::collections::HashMap;
 
 use axum::{
     extract::{Path, Query},
-    http::StatusCode,
+    http::{HeaderMap, StatusCode},
     response::{Form, Html, IntoResponse, Redirect},
     routing::{get, post},
     Router,
@@ -67,7 +67,10 @@ async fn index() -> Redirect {
     Redirect::permanent("/contacts")
 }
 
-async fn contacts(Query(contact_search): Query<ContactSearch>) -> Html<String> {
+async fn contacts(
+    headers: HeaderMap,
+    Query(contact_search): Query<ContactSearch>,
+) -> impl IntoResponse {
     let contacts_db = CONTACTS.lock().await;
     let search = contact_search.q.unwrap_or_else(|| String::new());
     let contacts = match search.is_empty() {
@@ -77,7 +80,14 @@ async fn contacts(Query(contact_search): Query<ContactSearch>) -> Html<String> {
     let mut context = Context::new();
     context.insert("contacts", &contacts);
 
-    Html(TEMPLATES.render("index.html", &context).unwrap())
+    let htmx_trigger = headers.get("hx-trigger").map(|h| h.to_str().unwrap_or(""));
+    if htmx_trigger == Some("search") {
+        context.insert("contacts", &contacts);
+        Html(TEMPLATES.render("rows.html", &context).unwrap())
+    } else {
+        context.insert("contacts", &contacts);
+        Html(TEMPLATES.render("index.html", &context).unwrap())
+    }
 }
 
 async fn contacts_new_get() -> Html<String> {
