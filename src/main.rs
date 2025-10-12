@@ -81,13 +81,17 @@ async fn contacts(
     context.insert("contacts", &contacts);
 
     let htmx_trigger = headers.get("hx-trigger").map(|h| h.to_str().unwrap_or(""));
-    if htmx_trigger == Some("search") {
-        context.insert("contacts", &contacts);
-        Html(TEMPLATES.render("rows.html", &context).unwrap())
-    } else {
-        context.insert("contacts", &contacts);
-        Html(TEMPLATES.render("index.html", &context).unwrap())
-    }
+    let rendered = match htmx_trigger {
+        Some("search") => {
+            context.insert("contacts", &contacts);
+            Html(TEMPLATES.render("rows.html", &context).unwrap())
+        }
+        _ => {
+            context.insert("contacts", &contacts);
+            Html(TEMPLATES.render("index.html", &context).unwrap())
+        }
+    };
+    rendered
 }
 
 async fn contacts_new_get() -> Html<String> {
