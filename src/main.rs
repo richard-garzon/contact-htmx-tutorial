@@ -7,7 +7,7 @@ use axum::{
     extract::{Path, Query},
     http::{HeaderMap, StatusCode},
     response::{Form, Html, IntoResponse, Redirect},
-    routing::{get, post},
+    routing::{delete, get, post},
     Router,
 };
 use lazy_static::lazy_static;
@@ -55,6 +55,7 @@ async fn main() {
         .route("/contacts/{id}", get(contacts_view))
         .route("/contacts/{id}/edit", get(contacts_edit_get))
         .route("/contacts/{id}/edit", post(contacts_edit_post))
+        .route("/contacts/{id}", delete(contacts_delete))
         .nest_service("/static", static_files)
         .fallback(handler_404);
 
@@ -217,6 +218,15 @@ async fn contacts_edit_post(
     };
 
     html
+}
+
+async fn contacts_delete(Path(id): Path<u32>) -> impl IntoResponse {
+    let mut contacts_db = CONTACTS.lock().await;
+    contacts_db.delete(id);
+    (
+        StatusCode::OK,
+        format!("Contact with id {} has been deleted.", id),
+    )
 }
 
 async fn handler_404() -> impl IntoResponse {

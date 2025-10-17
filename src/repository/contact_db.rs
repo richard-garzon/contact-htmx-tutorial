@@ -68,6 +68,10 @@ impl ContactDB {
         self.db.get(&id)
     }
 
+    pub fn delete(&mut self, id: u32) {
+        self.db.remove(&id);
+    }
+
     pub fn save(&mut self, c: Contact) {
         self.db.insert(c.id, c);
     }
