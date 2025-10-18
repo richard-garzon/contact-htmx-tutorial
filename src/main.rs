@@ -220,13 +220,18 @@ async fn contacts_edit_post(
     html
 }
 
-async fn contacts_delete(Path(id): Path<u32>) -> impl IntoResponse {
+async fn contacts_delete(Path(id): Path<u32>, headers: HeaderMap) -> impl IntoResponse {
     let mut contacts_db = CONTACTS.lock().await;
     contacts_db.delete(id);
-    (
-        StatusCode::OK,
-        format!("Contact with id {} has been deleted.", id),
-    )
+
+    let hx_trigger = headers.get("hx-trigger").map(|h| h.to_str().unwrap_or(""));
+
+    let rendered = match hx_trigger {
+        Some("delete-btn") => Redirect::to("/contacts").into_response(),
+        _ => Html("Contact deleted").into_response(),
+    };
+
+    rendered
 }
 
 async fn handler_404() -> impl IntoResponse {
