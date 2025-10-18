@@ -56,6 +56,7 @@ async fn main() {
         .route("/contacts/{id}/edit", get(contacts_edit_get))
         .route("/contacts/{id}/edit", post(contacts_edit_post))
         .route("/contacts/{id}", delete(contacts_delete))
+        .route("/contacts", delete(contacts_bulk_delete))
         .nest_service("/static", static_files)
         .fallback(handler_404);
 
@@ -93,6 +94,30 @@ async fn contacts(
         }
     };
     rendered
+}
+
+async fn contacts_bulk_delete(body: String) -> impl IntoResponse {
+    let mut selected_ids = Vec::new();
+
+    // Parse "selected_contact_ids=1&selected_contact_ids=2" format
+    for pair in body.split('&') {
+        if let Some((key, value)) = pair.split_once('=') {
+            if key == "selected_contact_ids" {
+                if let Ok(id) = value.parse::<u32>() {
+                    selected_ids.push(id);
+                }
+            }
+        }
+    }
+
+    let mut contacts_db = CONTACTS.lock().await;
+
+    for id in selected_ids {
+        contacts_db.delete(id);
+        println!("Deleted contact with ID: {}", id);
+    }
+
+    Redirect::to("/contacts").into_response()
 }
 
 async fn contacts_new_get() -> Html<String> {

@@ -322,6 +322,7 @@ dependencies = [
  "axum-flash",
  "lazy_static",
  "serde",
+ "serde_urlencoded",
  "tera",
  "tokio",
  "tower-http",
