@@ -50,6 +50,27 @@ impl Contact {
         self.email = other.email.clone();
         self.errors = other.errors.clone();
     }
+
+    pub fn validate(&mut self) {
+        if self.email.is_empty() {
+            self.errors
+                .insert("email".to_string(), "Email is required".to_string());
+        }
+        if self.first_name.is_empty() {
+            self.errors.insert(
+                "first_name".to_string(),
+                "First name is required".to_string(),
+            );
+        }
+        if self.last_name.is_empty() {
+            self.errors
+                .insert("last_name".to_string(), "Last name is required".to_string());
+        }
+        if self.phone.is_empty() {
+            self.errors
+                .insert("phone".to_string(), "Phone number is required.".to_string());
+        }
+    }
 }
 
 #[derive(Debug, Deserialize)]

@@ -64,6 +64,17 @@ impl ContactDB {
         result
     }
 
+    pub fn email_exists(&self, email: &String) -> bool {
+        let mut exists = false;
+        for c in self.db.values() {
+            if *email == c.email {
+                exists = true;
+            }
+        }
+
+        exists
+    }
+
     pub fn find(&self, id: u32) -> Option<&Contact> {
         self.db.get(&id)
     }

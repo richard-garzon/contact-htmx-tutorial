@@ -42,6 +42,11 @@ struct ContactSearch {
     q: Option<String>,
 }
 
+#[derive(Deserialize)]
+struct EmailValidation {
+    email: Option<String>,
+}
+
 #[tokio::main]
 async fn main() {
     let static_files = ServeDir::new("static");
@@ -57,6 +62,7 @@ async fn main() {
         .route("/contacts/{id}/edit", post(contacts_edit_post))
         .route("/contacts/{id}", delete(contacts_delete))
         .route("/contacts", delete(contacts_bulk_delete))
+        .route("/contacts/{id}/email", get(contacts_email))
         .nest_service("/static", static_files)
         .fallback(handler_404);
 
@@ -131,25 +137,9 @@ async fn contacts_new_get() -> Html<String> {
 }
 
 async fn contacts_new_post(Form(form_data): Form<ContactForm>) -> impl IntoResponse {
-    let mut errors = HashMap::new();
+    let errors = HashMap::new();
 
-    if form_data.email.trim().is_empty() {
-        errors.insert("email".to_string(), "Email is required".to_string());
-    }
-    if form_data.first_name.trim().is_empty() {
-        errors.insert(
-            "first_name".to_string(),
-            "First name is required".to_string(),
-        );
-    }
-    if form_data.last_name.trim().is_empty() {
-        errors.insert("last_name".to_string(), "Last name is required".to_string());
-    }
-    if form_data.phone.trim().is_empty() {
-        errors.insert("phone".to_string(), "Phone number is required.".to_string());
-    }
-
-    let contact = Contact::new(
+    let mut contact = Contact::new(
         999,
         form_data.first_name,
         form_data.last_name,
@@ -157,6 +147,8 @@ async fn contacts_new_post(Form(form_data): Form<ContactForm>) -> impl IntoRespo
         form_data.email,
         errors,
     );
+
+    contact.validate();
 
     let mut context = Context::new();
 
@@ -200,29 +192,24 @@ async fn contacts_edit_get(Path(id): Path<u32>) -> Html<String> {
     result
 }
 
+async fn contacts_email(Path(id): Path<u32>, Query(email): Query<EmailValidation>) -> Html<String> {
+    let contacts_db = CONTACTS.lock().await;
+    let curr_contact = contacts_db.find(id).unwrap();
+    let curr_email = email.email.unwrap().to_string();
+    if contacts_db.email_exists(&curr_email) && curr_email != curr_contact.email {
+        return Html("Email already exists".to_string());
+    } else {
+        return Html("".to_string());
+    }
+}
+
 async fn contacts_edit_post(
     Path(id): Path<u32>,
     Form(form_data): Form<ContactForm>,
 ) -> impl IntoResponse {
-    let mut errors = HashMap::new();
+    let errors = HashMap::new();
 
-    if form_data.email.trim().is_empty() {
-        errors.insert("email".to_string(), "Email is required".to_string());
-    }
-    if form_data.first_name.trim().is_empty() {
-        errors.insert(
-            "first_name".to_string(),
-            "First name is required".to_string(),
-        );
-    }
-    if form_data.last_name.trim().is_empty() {
-        errors.insert("last_name".to_string(), "Last name is required".to_string());
-    }
-    if form_data.phone.trim().is_empty() {
-        errors.insert("phone".to_string(), "Phone number is required.".to_string());
-    }
-
-    let contact = Contact::new(
+    let mut contact = Contact::new(
         id,
         form_data.first_name,
         form_data.last_name,
@@ -230,6 +217,8 @@ async fn contacts_edit_post(
         form_data.email,
         errors,
     );
+
+    contact.validate();
 
     let mut context = Context::new();
 
