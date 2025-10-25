@@ -47,6 +47,11 @@ struct EmailValidation {
     email: Option<String>,
 }
 
+#[derive(Deserialize)]
+struct Page {
+    page: Option<usize>,
+}
+
 #[tokio::main]
 async fn main() {
     let static_files = ServeDir::new("static");
@@ -78,26 +83,40 @@ async fn index() -> Redirect {
 async fn contacts(
     headers: HeaderMap,
     Query(contact_search): Query<ContactSearch>,
+    Query(page): Query<Page>,
 ) -> impl IntoResponse {
     let contacts_db = CONTACTS.lock().await;
+    const ITEMS_PER_PAGE: usize = 10;
+
     let search = contact_search.q.unwrap_or_else(|| String::new());
+
     let contacts = match search.is_empty() {
         true => contacts_db.all(),
         false => contacts_db.search(search),
     };
     let mut context = Context::new();
-    context.insert("contacts", &contacts);
+
+    // Handling paging
+    let curr_page = match page.page {
+        Some(p) => p,
+        _ => 1,
+    };
+    let total_count = contacts.len();
+    let total_pages = (total_count as f64 / ITEMS_PER_PAGE as f64).ceil() as usize;
+
+    let start = (curr_page - 1) * ITEMS_PER_PAGE;
+    let end = (start + ITEMS_PER_PAGE).min(total_count);
+    let contacts_on_page = &contacts[start..end];
+
+    // setting up context
+    context.insert("contacts", &contacts_on_page);
+    context.insert("page", &curr_page);
 
     let htmx_trigger = headers.get("hx-trigger").map(|h| h.to_str().unwrap_or(""));
+    // render rows.html only if it's a search, else render index.html
     let rendered = match htmx_trigger {
-        Some("search") => {
-            context.insert("contacts", &contacts);
-            Html(TEMPLATES.render("rows.html", &context).unwrap())
-        }
-        _ => {
-            context.insert("contacts", &contacts);
-            Html(TEMPLATES.render("index.html", &context).unwrap())
-        }
+        Some("search") => Html(TEMPLATES.render("rows.html", &context).unwrap()),
+        _ => Html(TEMPLATES.render("index.html", &context).unwrap()),
     };
     rendered
 }
