@@ -34,7 +34,7 @@ lazy_static! {
 }
 
 lazy_static! {
-    static ref CONTACTS: Mutex<ContactDB> = Mutex::new(ContactDB::new());
+    static ref CONTACTS: Mutex<ContactDB> = Mutex::new(ContactDB::new(30));
 }
 
 #[derive(Deserialize)]
